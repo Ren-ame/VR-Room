@@ -4,7 +4,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 public class WheelGrabHandle : MonoBehaviour
 {
     [SerializeField] private Rigidbody wheelRigidbody;
-    [SerializeField] private float torqueMultiplier = 500f;
+    [SerializeField] private float torqueMultiplier = 50f;
 
     private bool isGrabbed = false;
     private Transform handTransform;
@@ -31,6 +31,11 @@ public class WheelGrabHandle : MonoBehaviour
     {
         isGrabbed = false;
         handTransform = null;
+
+        // Y 회전만 남기고 나머지 진동 제거
+        Vector3 av = wheelRigidbody.angularVelocity;
+        Debug.Log($"놓을 때 angularVelocity: {av}");
+        wheelRigidbody.angularVelocity = new Vector3(0, 0, av.z);
         Debug.Log("놓음!");
     }
 
@@ -41,14 +46,19 @@ public class WheelGrabHandle : MonoBehaviour
         Vector3 currentPos = handTransform.position;
         Vector3 delta = currentPos - lastHandPosition;
 
-        Vector3 torque = Vector3.Cross(
-            (transform.position - wheelRigidbody.transform.position).normalized,
-            delta
-        ) * torqueMultiplier;
+        if (delta.magnitude < 0.0001f)
+        {
+            lastHandPosition = currentPos;
+            return;
+        }
 
-        Debug.Log($"delta: {delta}, torque: {torque}"); // 추가
+        Vector3 handleDir = (transform.position - wheelRigidbody.transform.position).normalized;
 
-        wheelRigidbody.AddTorque(torque);
+        Vector3 fullTorque = Vector3.Cross(handleDir, delta) * torqueMultiplier;
+
+        // Z축 토크만 적용
+        wheelRigidbody.AddTorque(new Vector3(0, 0, fullTorque.z));
+
         lastHandPosition = currentPos;
     }
 }
