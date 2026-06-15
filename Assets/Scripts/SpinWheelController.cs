@@ -9,6 +9,9 @@ public class SpinWheelController : MonoBehaviour
     [SerializeField] private float pointerAngle = 90f; // 12시 방향 각도 (조절 가능)
     [SerializeField] private float stillDuration = 0.5f; // 0.5초 이상 멈춰야 판정
     [SerializeField] private BettingManager bettingManager;
+    [SerializeField] private ResultUI resultUI;
+    [SerializeField] private Transform pointerArrow;
+
 
     private bool betPlaced = false; // 베팅 중복 방지
     private float stillTime = 0f;
@@ -20,7 +23,6 @@ public class SpinWheelController : MonoBehaviour
 
         if (speed > stopThreshold)
         {
-            // 돌기 시작할 때 베팅 차감
             if (!isSpinning && !betPlaced)
             {
                 if (!bettingManager.PlaceBet())
@@ -29,6 +31,7 @@ public class SpinWheelController : MonoBehaviour
                     return;
                 }
                 betPlaced = true;
+                resultUI.Hide(); // 돌리기 시작할 때 숨기기
             }
             isSpinning = true;
             stillTime = 0f;
@@ -50,26 +53,37 @@ public class SpinWheelController : MonoBehaviour
 
     private void JudgeResult()
     {
-        // 즉시 멈추기
         wheelRigidbody.angularVelocity = Vector3.zero;
 
         WheelSectorBuilder builder = GetComponent<WheelSectorBuilder>();
 
-        float angle = (wheelRigidbody.transform.eulerAngles.z % 360f + 360f) % 360f;
-        int totalSectors = builder.builtSectors.Count;
-        float sectorSize = 360f / totalSectors;
-        int sectorIndex = Mathf.FloorToInt(angle / sectorSize) % totalSectors;
+        Vector3 localPointerDir = wheelRigidbody.transform
+            .InverseTransformPoint(pointerArrow.position).normalized;
 
-        SectorData result = builder.builtSectors[sectorIndex];
+        int closestIndex = 0;
+        float maxDot = float.MinValue;
+
+        for (int i = 0; i < builder.sectorCenterDirections.Count; i++)
+        {
+            float dot = Vector3.Dot(localPointerDir, builder.sectorCenterDirections[i]);
+            if (dot > maxDot)
+            {
+                maxDot = dot;
+                closestIndex = i;
+            }
+        }
+
+        SectorData result = builder.builtSectors[closestIndex];
 
         if (result.multiplier == bettingManager.selectedMultiplier)
         {
+            int winAmount = Mathf.RoundToInt(bettingManager.BetAmount * result.multiplier);
             bettingManager.Win(result.multiplier);
-            Debug.Log($"당첨! x{result.multiplier}");
+            resultUI.ShowWin(result.multiplier, winAmount);
         }
         else
         {
-            Debug.Log($"꽝! 결과 x{result.multiplier} / 선택 x{bettingManager.selectedMultiplier}");
+            resultUI.ShowLose(result.multiplier, bettingManager.BetAmount);
         }
 
         if (audioSource != null && resultClip != null)

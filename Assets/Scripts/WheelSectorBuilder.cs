@@ -16,8 +16,8 @@ public class WheelSectorBuilder : MonoBehaviour
     {
         new SectorData { color = Color.red,    count = 1, multiplier = 10f },
         new SectorData { color = Color.yellow, count = 2, multiplier = 5f  },
-        new SectorData { color = Color.cyan,   count = 4, multiplier = 2f  },
-        new SectorData { color = Color.green,  count = 8, multiplier = 1f  },
+        new SectorData { color = Color.cyan,   count = 4, multiplier = 3f  },
+        new SectorData { color = Color.green,  count = 8, multiplier = 2f  },
     };
 
     [SerializeField] private float radius = 1f;
@@ -57,8 +57,13 @@ public class WheelSectorBuilder : MonoBehaviour
         }
     }
 
+    public List<Vector3> sectorCenterDirections = new List<Vector3>();
     void CreateSector(SectorData data, float angleStart, float angleEnd)
     {
+        float centerAngle = (angleStart + angleEnd) / 2f * Mathf.Deg2Rad;
+        Vector3 centerDir = new Vector3(Mathf.Cos(centerAngle), 0, Mathf.Sin(centerAngle));
+        sectorCenterDirections.Add(centerDir);
+
         GameObject sector = new GameObject($"Sector_{data.multiplier}x");
         sector.transform.SetParent(transform, false);
 

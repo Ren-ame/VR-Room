@@ -3,12 +3,15 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 public class DoorController : MonoBehaviour
 {
-    [SerializeField] private Rigidbody doorRigidbody;
-    [SerializeField] private float torqueMultiplier = 2000f; // 200 → 2000
+    [SerializeField] private Transform doorTransform;
+    [SerializeField] private float rotateSpeed = 300f;
+    [SerializeField] private float minAngle = 0f;
+    [SerializeField] private float maxAngle = 90f;
 
     private bool isGrabbed = false;
     private Transform handTransform;
     private Vector3 lastHandPosition;
+    private float currentAngle = 0f;
     private XRBaseInteractable interactable;
 
     void Awake()
@@ -23,35 +26,25 @@ public class DoorController : MonoBehaviour
         isGrabbed = true;
         handTransform = args.interactorObject.transform;
         lastHandPosition = handTransform.position;
-        Debug.Log("문 손잡이 잡음!");
     }
 
     void OnRelease(SelectExitEventArgs args)
     {
         isGrabbed = false;
         handTransform = null;
-        doorRigidbody.angularVelocity = Vector3.zero;
     }
 
-   void FixedUpdate()
-   {
+    void Update()
+    {
         if (!isGrabbed || handTransform == null) return;
 
         Vector3 currentPos = handTransform.position;
         Vector3 delta = currentPos - lastHandPosition;
 
-        Debug.Log($"delta: {delta}");
+        float angle = delta.x * rotateSpeed;
+        currentAngle = Mathf.Clamp(currentAngle + angle, minAngle, maxAngle);
 
-        if (delta.magnitude < 0.0001f)
-        {
-            lastHandPosition = currentPos;
-            return;
-        }
-
-        Vector3 handleDir = (transform.position - doorRigidbody.transform.position).normalized;
-        float torqueY = (handleDir.x * delta.z - handleDir.z * delta.x) * torqueMultiplier;
-
-        doorRigidbody.AddTorque(new Vector3(0, torqueY, 0));
+        doorTransform.localRotation = Quaternion.Euler(0, currentAngle, 0);
         lastHandPosition = currentPos;
-   }
+    }
 }

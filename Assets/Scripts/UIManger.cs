@@ -32,7 +32,7 @@ public class UIManager : MonoBehaviour
 
     public void UpdateSelectedMultiplier(float multiplier)
     {
-        float[] multipliers = { 1f, 2f, 5f, 10f };
+        float[] multipliers = { 2f, 3f, 5f, 10f };
 
         for (int i = 0; i < multiplierBtns.Length; i++)
         {

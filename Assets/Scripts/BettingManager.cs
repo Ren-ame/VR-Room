@@ -10,7 +10,7 @@ public class BettingManager : MonoBehaviour
     [SerializeField] private int maxBet = 1000;
 
     public int BetAmount => betAmount;
-    public float selectedMultiplier = 1f;
+    public float selectedMultiplier = 2f;
     public UnityEvent<float> onMultiplierChanged;
     public UnityEvent<int> onBetChanged; // UI 업데이트용
 
