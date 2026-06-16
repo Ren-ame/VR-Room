@@ -5,6 +5,7 @@ public class SpinWheelController : MonoBehaviour
     [SerializeField] private Rigidbody wheelRigidbody;
     [SerializeField] private float stopThreshold = 0.1f;
     [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip spinClip; // 스핀 사운드 파일
     [SerializeField] private AudioClip resultClip;
     [SerializeField] private float pointerAngle = 90f; // 12시 방향 각도 (조절 가능)
     [SerializeField] private float stillDuration = 0.5f; // 0.5초 이상 멈춰야 판정
@@ -32,6 +33,14 @@ public class SpinWheelController : MonoBehaviour
                 }
                 betPlaced = true;
                 resultUI.Hide(); // 돌리기 시작할 때 숨기기
+
+                // 스핀 사운드 시작
+                if (audioSource != null && spinClip != null)
+                {
+                    audioSource.clip = spinClip;
+                    audioSource.loop = true;
+                    audioSource.Play();
+                }
             }
             isSpinning = true;
             stillTime = 0f;
@@ -43,6 +52,9 @@ public class SpinWheelController : MonoBehaviour
 
             if (stillTime >= stillDuration)
             {
+                // 스핀 사운드 멈춤
+                audioSource.Stop();
+
                 isSpinning = false;
                 stillTime = 0f;
                 betPlaced = false; // 다음 베팅 허용
@@ -80,13 +92,13 @@ public class SpinWheelController : MonoBehaviour
             int winAmount = Mathf.RoundToInt(bettingManager.BetAmount * result.multiplier);
             bettingManager.Win(result.multiplier);
             resultUI.ShowWin(result.multiplier, winAmount);
+
+            if (audioSource != null && resultClip != null)
+                audioSource.PlayOneShot(resultClip);
         }
         else
         {
             resultUI.ShowLose(result.multiplier, bettingManager.BetAmount);
         }
-
-        if (audioSource != null && resultClip != null)
-            audioSource.PlayOneShot(resultClip);
     }
 }
